@@ -1,0 +1,6 @@
+# Scope terms for the capture check script.
+# Format: term | files allowed to mention it (comma separated, paths relative to the vault root)
+# Matching ignores case. A term may appear only in the listed files.
+# Leave the file list empty to forbid the term everywhere.
+# Example: an employer's name, allowed only in the README and the owner's own article:
+# examplecorp | README.md, People/Owner Name.md

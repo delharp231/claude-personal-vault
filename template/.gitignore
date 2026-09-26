@@ -1,0 +1,11 @@
+# Obsidian UI state (changes constantly, per-device)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+
+# Obsidian's local trash
+.trash/
+
+# OS clutter
+.DS_Store
+Thumbs.db
