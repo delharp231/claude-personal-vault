@@ -25,7 +25,7 @@ Build my personal vault using https://github.com/delharp231/claude-personal-vaul
 - A GitHub account, with the GitHub CLI (`gh`) installed and signed in
 - Git
 - [Obsidian](https://obsidian.md)
-- Claude Code on a plan that includes cloud sessions, if you want to capture from your phone
+- Claude Code on a plan that includes cloud sessions, if you want to capture from your phone. Phone sessions must be opened on your vault repo.
 
 Plan for a few hours, spread across as many sittings as you like. Each step ends with a checkpoint for your approval.
 

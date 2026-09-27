@@ -15,6 +15,7 @@ You are helping the owner build a personal ontology vault: a private, git-backed
 
 - Never force-push, delete files, delete branches, or rewrite git history without the owner's explicit approval for that specific action.
 - Never write credentials, passwords, API keys, or tokens into the vault.
+- Before the owner installs any Obsidian plugin besides Git, check what it writes inside the vault folder. The Git plugin auto-commits everything that isn't ignored, including a plugin's settings file (which may hold an access token) and any program files it downloads. Add those paths to `.gitignore` before the next auto-commit, and remove the lines if the plugin is uninstalled.
 - Ask before capturing sensitive categories: health, family members, finances, and anything about the owner's employer.
 - If the owner has an employer, agree early on a bright line (for example, "company name and job title only, no internal details") and write it into the vault's Scope section.
 
@@ -101,7 +102,7 @@ Rules while seeding:
 
 ## Step 5: Verify
 
-1. Have the owner open a brand-new Claude session in a folder other than the vault and ask questions only the vault can answer. Every answer should cite a vault file.
+1. Have the owner open a brand-new Claude Code session **on this computer**, in a folder other than the vault, and ask questions only the vault can answer. Every answer should cite a vault file. Don't run this test in a cloud session opened on a different repo: cloud sessions only see the repo they are opened on and never read the computer's global `CLAUDE.md`, so they can't find the vault.
 2. Review the README with the owner. It should let a future agent work in the vault with no other context.
 
 **Gate:** the owner signs off.
