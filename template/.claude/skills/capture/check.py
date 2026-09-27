@@ -65,6 +65,13 @@ titles = {os.path.splitext(os.path.basename(r))[0] for r in all_notes}
 index = read("index.md") if "index.md" in all_notes else ""
 scope = load_scope()
 
+PLACEHOLDER = re.compile(r"<[A-Z][A-Z ]{3,}|<!-- Setup:")
+for rel in ("README.md", "CLAUDE.md"):
+    if rel in all_notes:
+        for n, line in enumerate(read(rel).splitlines(), start=1):
+            if PLACEHOLDER.search(line):
+                problems.append(f"{rel}:{n}: unfilled setup placeholder: {line.strip()[:80]}")
+
 for rel in all_notes:
     text = read(rel)
     if "—" in text or "–" in text:

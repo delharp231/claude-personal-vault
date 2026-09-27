@@ -62,7 +62,7 @@ Read the three articles in `reference/` and summarize them for the owner. Then s
 6. **Scope.** Employer rule, sensitive categories, anything the owner wants kept out.
 7. **Seeding sources.** What material exists to seed from (see Step 3).
 
-Then copy `template/` into the vault and fill in `README.md` with these decisions. Fill in `.claude/scope.txt` with the terms the check script should police. Copy the three reference articles into the vault's concepts folder in the new template.
+Then copy everything in `template/`, including the hidden `.claude` folder, into the vault, and fill in `README.md` with these decisions. Fill in `.claude/scope.txt` with the terms the check script should police. Copy the three reference articles into the vault's concepts folder and list them in `index.md`, adding a section per type. Run `python .claude/skills/capture/check.py .` and keep going until it passes. It fails on any placeholder left in `README.md` or `CLAUDE.md`, which is how you know setup is finished.
 
 **Gate:** the owner approves every decision, and the README states them.
 
