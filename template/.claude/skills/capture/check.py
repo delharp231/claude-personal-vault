@@ -74,6 +74,11 @@ for rel in ("README.md", "CLAUDE.md"):
 
 for rel in all_notes:
     text = read(rel)
+    if not text.strip():
+        problems.append(f"{rel}: empty note (often made by clicking an unresolved link in Obsidian)")
+        continue
+    if "/" not in rel and rel not in SPECIAL:
+        problems.append(f"{rel}: note in the vault root; move it into its type folder")
     if "—" in text or "–" in text:
         problems.append(f"{rel}: contains an em or en dash")
     lower = text.lower()
