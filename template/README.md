@@ -143,6 +143,7 @@ Agents capture durable information into this vault as it comes up, using the `ca
 - **Commit identity:** every commit must be authored as the owner, or cloud sessions lose the right to push to `main`. Before committing, if `git config user.email` is not the address below, set it for this repo:
   - `git config user.name "<OWNER GIT NAME>"`
   - `git config user.email "<OWNER GITHUB NOREPLY EMAIL>"`
+- **Cloud and phone sessions:** open them on this repo. A cloud session only sees the repo it was opened on and can only push to that repo, so a session opened on any other repo can't read or save to the vault. Laptop sessions find the vault through the global `CLAUDE.md` wherever they're opened.
 
 ## Maintenance
 

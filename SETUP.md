@@ -94,7 +94,7 @@ Rules while seeding:
    - Windows: `New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\capture" -Target "<vault>\.claude\skills\capture"`
    - macOS or Linux: `ln -s "<vault>/.claude/skills/capture" ~/.claude/skills/capture`
 3. **Always-on trigger.** Append to the owner's global `~/.claude/CLAUDE.md` a short section naming the vault path and saying: capture is always on, use the `capture` skill, and stay silent except for its one-line notices. The vault's own `CLAUDE.md` from the template covers sessions opened on the repo.
-4. **Phone.** The Claude app's **Code** tab runs cloud Claude Code sessions that can clone the repo and push. Regular app chats cannot write to GitHub. Have the owner install the Claude GitHub App (github.com/apps/claude) on the vault repo.
+4. **Phone.** The Claude app's **Code** tab runs cloud Claude Code sessions that can clone the repo and push. Regular app chats cannot write to GitHub. Have the owner install the Claude GitHub App (github.com/apps/claude) on the vault repo. Tell the owner to always open phone and cloud sessions on the vault repo: a cloud session only reaches the repo it was opened on and never sees the laptop's global `CLAUDE.md`.
 5. **Test both surfaces with real captures.** After the phone test, check on GitHub that the commit landed on `main`, is authored as the owner, and passed the check.
 
 **Gate:** one real capture from each surface, confirmed in Obsidian.
