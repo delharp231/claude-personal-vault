@@ -155,7 +155,7 @@ Capture adds facts as they come up, so the vault drifts. When the owner asks for
 - orphan articles that nothing links to
 - unresolved links that now have enough sourced facts to become articles
 - anything the Scope section excludes
-- leftover `claude/...` branches on GitHub from cloud sessions. Delete a branch only if `git rev-list --count origin/main..origin/<branch>` prints `0`, meaning `main` already has all its commits. Cloud sessions can't delete these themselves.
+- leftover `claude/...` branches on GitHub from cloud sessions. Delete a branch only if `git rev-list --count origin/main..origin/<branch>` prints `0`, meaning `main` already has all its commits. Cloud sessions can't delete these themselves; the `cleanup-claude-branches` GitHub Action normally does it, so any left here mean the Action failed and is worth checking.
 
 Report what changed with one line per article, and stay silent on anything that was already fine.
 
