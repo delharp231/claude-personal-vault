@@ -18,6 +18,7 @@ Build my personal vault using https://github.com/delharp231/claude-personal-vaul
 - **Your own design.** Claude interviews you to settle the article template, the kinds of things you track, how they link, and what stays out.
 - **A seeded vault**, built from what already exists: your Claude memory, your Claude Code and Cowork conversations, your GitHub repos, and a short interview. Every fact is cited to where it came from.
 - **Always-on capture.** When something worth remembering comes up in any Claude Code session, on your desktop or in the Claude app's Code tab on your phone, Claude saves it to the vault on its own and tells you only about new articles, connections across different areas of your life, and conflicting information.
+- **Context in every session.** On your computer, each new Claude Code session syncs the vault and starts with its index loaded, then opens full articles only when the conversation needs them.
 - **A safety check** that runs before every commit and blocks broken formatting or anything you have ruled out of scope.
 
 ## What you need

@@ -161,4 +161,4 @@ Report what changed with one line per article, and stay silent on anything that 
 
 ## Sync
 
-The Obsidian Git plugin pulls on startup, and pulls, commits, and pushes every 10 minutes. Agents writing outside Obsidian pull with rebase right before committing, run the check script, then push straight to `main`. If a rebase conflicts, stop and flag it rather than forcing it.
+The Obsidian Git plugin pulls on startup, and pulls, commits, and pushes every 10 minutes. On the owner's computer, a Claude Code SessionStart hook (`.claude/hooks/session_start.py`) also pulls, fast-forward only, at the start of every session and loads `index.md` as context, so sessions start current even when Obsidian is closed. Agents read the index every session and open articles only when needed. Agents writing outside Obsidian pull with rebase right before committing, run the check script, then push straight to `main`. If a rebase conflicts, stop and flag it rather than forcing it.
