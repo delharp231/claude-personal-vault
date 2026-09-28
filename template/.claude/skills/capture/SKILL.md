@@ -39,10 +39,6 @@ Capture if the information is durable as the README defines it and allowed by it
    - `git -C "<vault>" pull --rebase --autostash`
    - `git -C "<vault>" push origin HEAD:main`
    - If the rebase conflicts, run `git -C "<vault>" rebase --abort`, leave the change uncommitted, and flag it to the owner. Never force-push.
-8. **Clean up a cloud session's side branch.** Cloud sessions may also push their own `claude/...` branch. After the push to `main` succeeds, delete that one branch, and only if `main` already contains all of its commits:
-   - `git -C "<vault>" fetch origin`
-   - If `git -C "<vault>" rev-list --count origin/main..origin/<branch>` prints `0`, run `git -C "<vault>" push origin --delete <branch>`.
-   - Never delete a branch that has commits missing from `main`, and never delete any branch this session did not create.
 
 ## Tell the owner, or don't
 
