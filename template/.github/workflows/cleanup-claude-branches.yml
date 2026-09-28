@@ -1,0 +1,39 @@
+# Deletes claude/... branches that cloud Claude Code sessions leave behind,
+# but only when main already contains every commit on the branch.
+# A branch with any commit missing from main is never touched.
+name: Clean up merged claude branches
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  schedule:
+    - cron: "17 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cleanup-claude-branches
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # never check out the claude/ branch itself; another run may have deleted it
+          fetch-depth: 0
+      - name: Delete claude/ branches already contained in main
+        run: |
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+          for ref in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin/claude/); do
+            branch="${ref#origin/}"
+            missing=$(git rev-list --count "origin/main..$ref")
+            if [ "$missing" = "0" ]; then
+              echo "Deleting $branch: every commit is already in main"
+              git push origin --delete "$branch"
+            else
+              echo "Keeping $branch: $missing commit(s) not in main"
+            fi
+          done
