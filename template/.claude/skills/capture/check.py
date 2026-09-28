@@ -9,8 +9,8 @@ import re
 import sys
 
 ROOT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-SKIP_DIRS = {".git", ".obsidian", ".claude", ".trash"}
-SPECIAL = {"README.md", "index.md", "log.md", "CLAUDE.md"}
+SKIP_DIRS = {".git", ".obsidian", ".claude", ".trash", "archive"}
+SPECIAL = {"README.md", "index.md", "log.md", "CLAUDE.md", "AGENTS.md"}
 FIELD = re.compile(r"^[a-z_]+:( .*)?$")
 ITEM = re.compile(r"^  - .+$")
 problems = []
