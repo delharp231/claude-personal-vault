@@ -18,7 +18,9 @@
 | `README.md` | These rules |
 | `index.md` | Every article, grouped by type, with a one-line description. Read it first to find what exists. |
 | `log.md` | Append-only record of changes, newest at the bottom |
-| `CLAUDE.md` | Short instructions any Claude session in this repo loads automatically |
+| `archive/` | Read-only snapshots of other agents' memory, cited as sources |
+| `AGENTS.md` | Session-start steps for any agent or harness: pull, read the rules and index, read `Preferences/`, capture |
+| `CLAUDE.md` | Imports `AGENTS.md`, so Claude sessions load the same instructions |
 | `.claude/skills/capture/SKILL.md` | The capture procedure |
 | `.claude/skills/capture/check.py` | Pre-commit check. Run `python .claude/skills/capture/check.py .` and never commit while it fails |
 | `.claude/scope.txt` | Terms the check watches for, and where each may appear |
@@ -80,6 +82,16 @@ One or two sentences saying what this is.
 - **Footnotes:** every claim gets one. Put the citation on the claim, not only at the end.
 - **`captured_from`:** how the article entered the vault (research, conversation, seed), which surface, and the date.
 - **`updated`:** change it whenever the article changes.
+
+## Goals are directions
+
+<!-- Setup: optional. Keep this section only if the owner chose goals as directions in Step 2, and change the Goals row above to match. Otherwise delete the whole section. Either way, delete this comment. -->
+
+Goals are directional and fluid, not hard locks.
+
+- The summary line names the direction. The direction may drift.
+- `## Current bets` holds the concrete moves the owner is making now, each with a date. When a bet changes, keep the old one with its date (the conflict rule) and mark which is current.
+- External deadlines and the owner's stated preferences inside a goal (a filing date, a thing they won't buy) stay firm. Only the goal itself is fluid.
 
 ## Relationships
 
@@ -143,7 +155,8 @@ Agents capture durable information into this vault as it comes up, using the `ca
 - **Commit identity:** every commit must be authored as the owner, or cloud sessions lose the right to push to `main`. Before committing, if `git config user.email` is not the address below, set it for this repo:
   - `git config user.name "<OWNER GIT NAME>"`
   - `git config user.email "<OWNER GITHUB NOREPLY EMAIL>"`
-- **Cloud and phone sessions:** open them on this repo. A cloud session only sees the repo it was opened on and can only push to that repo, so a session opened on any other repo can't read or save to the vault. Laptop sessions find the vault through the global `CLAUDE.md` wherever they're opened.
+- **The vault, not a harness's memory:** durable facts about the owner go in this vault, never in a harness's private memory (such as Claude's auto-memory). That memory holds only quirks of the harness itself, so there is one version of the owner, and it survives a switch of model or tool.
+- **Cloud and phone sessions:** open them on this repo. A cloud session only sees the repo it was opened on and can only push to that repo, so a session opened on any other repo can't read or save to the vault. Laptop sessions find the vault through the global instruction file each harness loads (such as `~/.claude/CLAUDE.md`), wherever they're opened.
 
 ## Maintenance
 
@@ -159,6 +172,17 @@ Capture adds facts as they come up, so the vault drifts. When the owner asks for
 
 Report what changed with one line per article, and stay silent on anything that was already fine.
 
+## Building on the vault
+
+Routines, skills, and agents built on this vault read only the part a task needs, never the whole vault.
+
+- Name the entry points a task needs, such as `log.md` for a date range, particular articles, or particular preferences, and open other articles only when those point to them.
+- A script that parses every file with no model involved is fine. The rule governs what a model reads: each model step gets only the slice the script hands it.
+
+## Archive
+
+`archive/` holds read-only snapshots of other agents' memory, such as Claude's auto-memory or a memory export from another assistant, kept so citations to them resolve on any machine. Each snapshot is dated, for example `archive/claude-memory-2026-01-01/`. Cite a snapshot file as a source, but never edit it, never link it as an article, and never add new snapshots over old ones. The check script and Obsidian both skip this folder.
+
 ## Sync
 
-The Obsidian Git plugin pulls on startup, and pulls, commits, and pushes every 10 minutes. On the owner's computer, a Claude Code SessionStart hook (`.claude/hooks/session_start.py`) also pulls, fast-forward only, at the start of every session and loads `index.md` as context, so sessions start current even when Obsidian is closed. Agents read the index every session and open articles only when needed. Agents writing outside Obsidian pull with rebase right before committing, run the check script, then push straight to `main`. If a rebase conflicts, stop and flag it rather than forcing it.
+The Obsidian Git plugin pulls on startup, and pulls, commits, and pushes every 10 minutes. On the owner's computer, a SessionStart hook (`.claude/hooks/session_start.py`, plain Python) also pulls, fast-forward only, at the start of every Claude Code session and loads `index.md` as context, so sessions start current even when Obsidian is closed. Harnesses without that hook pull as the first step in `AGENTS.md`. Agents read the index every session and open articles only when needed. Agents writing outside Obsidian pull with rebase right before committing, run the check script, then push straight to `main`. If a rebase conflicts, stop and flag it rather than forcing it.

@@ -17,13 +17,14 @@ You are helping the owner build a personal ontology vault: a private, git-backed
 - Never write credentials, passwords, API keys, or tokens into the vault.
 - Before the owner installs any Obsidian plugin besides Git, check what it writes inside the vault folder. The Git plugin auto-commits everything that isn't ignored, including a plugin's settings file (which may hold an access token) and any program files it downloads. Add those paths to `.gitignore` before the next auto-commit, and remove the lines if the plugin is uninstalled.
 - Ask before capturing sensitive categories: health, family members, finances, and anything about the owner's employer.
-- If the owner has an employer, agree early on a bright line (for example, "company name and job title only, no internal details") and write it into the vault's Scope section.
+- If the owner has an employer, agree early on a bright line (for example, "company name and job title only, no internal details") and write it into the vault's Scope section. The check script's word list (`.claude/scope.txt`) can only enforce rules about names and terms. A rule that needs judgment, like "nothing confidential," lives only in the Scope section, and agents apply it by reading.
 
 ## Files in this repo
 
 | Path | Use |
 | --- | --- |
 | `template/` | Starting files for the owner's vault. Copy, then fill in. |
+| `template/AGENTS.md` | Session-start steps any agent tool can read. The vault's `CLAUDE.md` imports it, so Claude reads the same file and the two can't drift. |
 | `template/.claude/skills/capture/` | The capture skill and its check script. Generic: they read every owner-specific rule from the vault's README. |
 | `reference/` | Three research articles behind the design. Use them in Step 2 instead of redoing the research. |
 | `tools/extract_messages.py` | Pulls only the owner's own typed messages out of Claude Code and Cowork transcripts, for seeding. |
@@ -57,13 +58,16 @@ Read the three articles in `reference/` and summarize them for the owner. Then s
 
 1. **Article template.** Ask what an agent should be able to tell at a glance. The template in `template/README.md` is a tested default.
 2. **Entity types.** Build the list from the owner's own life, using schema.org's top level as a checklist. Flag questionable items and let the owner decide.
-3. **Relationship types.** Start from the default set in `template/README.md`. Store each relationship in one direction only, and let backlinks show the reverse.
-4. **Folders.** One folder per type, flat inside, is the tested default. Folders are the only structure visible on GitHub from a phone.
-5. **Life areas.** Used to decide which new links are worth telling the owner about.
-6. **Scope.** Employer rule, sensitive categories, anything the owner wants kept out.
-7. **Seeding sources.** What material exists to seed from (see Step 3).
+3. **Goals.** If goals are one of the types, ask whether they are fixed targets or directions.
+   - **Fixed targets** (the default): each goal has a `## Plan` section. Delete the optional "Goals are directions" section from `README.md`.
+   - **Directions:** the goal may drift. The summary line names the direction, and a `## Current bets` section lists the concrete moves the owner is making now, each dated, with old bets kept when they change. Deadlines and stated preferences inside a goal stay firm. This suits owners whose goals shift as they learn. Keep the "Goals are directions" section in `README.md`, and change the Goals row in its folder table to: "Directions the owner is moving in, not fixed targets. Each has a `## Current bets` section: the concrete moves they are making now."
+4. **Relationship types.** Start from the default set in `template/README.md`. Store each relationship in one direction only, and let backlinks show the reverse.
+5. **Folders.** One folder per type, flat inside, is the tested default. Folders are the only structure visible on GitHub from a phone.
+6. **Life areas.** Used to decide which new links are worth telling the owner about.
+7. **Scope.** Employer rule, sensitive categories, anything the owner wants kept out.
+8. **Seeding sources.** What material exists to seed from (see Step 3).
 
-Then copy everything in `template/`, including the hidden `.claude` folder, into the vault, and fill in `README.md` with these decisions. Fill in `.claude/scope.txt` with the terms the check script should police. Copy the three reference articles into the vault's concepts folder and list them in `index.md`, adding a section per type. Run `python .claude/skills/capture/check.py .` and keep going until it passes. It fails on any placeholder left in `README.md` or `CLAUDE.md`, which is how you know setup is finished.
+Then copy everything in `template/`, including `AGENTS.md` and the hidden `.claude` folder, into the vault, and fill in `README.md` with these decisions. If the owner renamed the preferences type, change `Preferences/` in `AGENTS.md` to match. Fill in `.claude/scope.txt` with the terms the check script should police. Copy the three reference articles into the vault's concepts folder and list them in `index.md`, adding a section per type. Run `python .claude/skills/capture/check.py .` and keep going until it passes. It fails on any placeholder left in `README.md` or `CLAUDE.md`, which is how you know setup is finished.
 
 **Gate:** the owner approves every decision, and the README states them.
 
@@ -72,6 +76,7 @@ Then copy everything in `template/`, including the hidden `.claude` folder, into
 Seed from material that already exists, citing every fact to its source. Ask the owner which of these to use:
 
 - **Claude memory files**, in `~/.claude/projects/*/memory/`.
+- **Memory from other AI assistants** the owner has used, exported or pasted in.
 - **Claude Code and Cowork transcripts.** Run `python tools/extract_messages.py <output-folder>`, then read only the output. It keeps the owner's own typed messages and cuts tool output and long pastes. Never quote transcripts into the vault wholesale.
 - **GitHub repos**: `gh repo list <user>` and each repo's README.
 - **Project folders** on disk.
@@ -79,12 +84,16 @@ Seed from material that already exists, citing every fact to its source. Ask the
 
 Rules while seeding:
 
+- **Archive memory before seeding from it.** Copy each memory source into the vault's `archive/` as a dated snapshot, for example `archive/claude-memory-<date>/` for Claude's memory folder and `archive/<assistant>-memory-<date>.md` for a pasted export. Cite the archived copy, not the original, so citations still resolve on another machine or after the original is gone. Have the owner add `archive/` under Obsidian's **Settings > Files and links > Excluded files**, so the snapshots stay out of search and the graph.
+- Memory from different assistants often disagrees. Keep both claims with their dates, and ask the owner to settle each real disagreement, per the README's conflict rule.
 - Build the owner's own article first as the hub, then preferences and goals, then everything else.
 - Work in batches. Stop after each batch for the owner to review in Obsidian.
 - An article needs at least one sourced fact. Leave unknowns as unresolved `[[links]]`.
 - Apply the Scope section to every fact. Check every source for employer details before writing.
 - Run `python .claude/skills/capture/check.py .` before every commit.
 - If the owner asks you to delete any record of something, remove it from the vault and from your working files, and tell them how to delete the original themselves.
+
+**Retire the old memory.** Once the vault holds what the memory files held, ask the owner whether to trim them. Otherwise two versions of the owner drift apart, and agents can't tell which is current. With approval, back the memory folder up, then move out (don't delete) every file that holds facts about the owner. Keep only notes about the harness itself, plus one note saying that facts about the owner live in the vault.
 
 **Gate:** the owner browses the seeded vault and confirms it reads well and the links work.
 
@@ -94,20 +103,26 @@ Rules while seeding:
 2. **Desktop.** Link the vault's `.claude/skills/capture` folder into `~/.claude/skills/capture` so every Claude Code session finds it:
    - Windows: `New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\capture" -Target "<vault>\.claude\skills\capture"`
    - macOS or Linux: `ln -s "<vault>/.claude/skills/capture" ~/.claude/skills/capture`
-3. **Always-on trigger.** Append to the owner's global `~/.claude/CLAUDE.md` a short section naming the vault path and saying: the session-start hook loads the vault's index as the basics, so open individual articles only when the conversation needs them; capture is always on, use the `capture` skill, and stay silent except for its one-line notices. The vault's own `CLAUDE.md` from the template covers sessions opened on the repo.
+3. **Always-on trigger.** Append to the owner's global `~/.claude/CLAUDE.md` a short section naming the vault path and saying: at the start of every session, follow the vault's `AGENTS.md` (pull, read `README.md` and `index.md`, and read every article in `Preferences/` before acting for the owner); the session-start hook loads the vault's index as the basics, so open other articles only when the conversation needs them; capture is always on, use the `capture` skill, and stay silent except for its one-line notices; write durable facts about the owner to the vault, never to a harness's private memory. The vault's own `AGENTS.md`, which its `CLAUDE.md` imports, covers sessions opened on the repo.
 4. **Session-start hook.** Register `<vault>/.claude/hooks/session_start.py` as a `SessionStart` hook in the owner's `~/.claude/settings.json`. At the start of every session on this computer it pulls the vault (fast-forward only, so it never merges or leaves a conflict, and it skips quietly when offline) and loads `index.md` as context. Sessions then start current even when Obsidian is closed, and the capture skill is always the latest version.
    - Back up `settings.json` first, then merge this in without removing existing settings: `{"hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": "python \"<vault>/.claude/hooks/session_start.py\"", "timeout": 30}]}]}}`. Use forward slashes in the path, and `python3` if that is the owner's Python command.
    - Test it by running the command once by hand: it should print a one-line header followed by the index.
-5. **Phone.** The Claude app's **Code** tab runs cloud Claude Code sessions that can clone the repo and push. Regular app chats cannot write to GitHub. Have the owner install the Claude GitHub App (github.com/apps/claude) on the vault repo. Tell the owner to always open phone and cloud sessions on the vault repo: a cloud session only reaches the repo it was opened on and never sees the laptop's global `CLAUDE.md`.
-6. **Branch cleanup.** Cloud sessions leave `claude/...` branches on GitHub and can't delete them. Copy `template/.github/workflows/cleanup-claude-branches.yml` into the vault. This GitHub Action deletes a `claude/` branch only when `main` already has every commit on it, on each push and once a day. Test it: push a throwaway `claude/test` branch at `main`'s commit and confirm the Action deletes it.
-7. **Test both surfaces with real captures.** After the phone test, check on GitHub that the commit landed on `main`, is authored as the owner, and passed the check.
+5. **Other agent tools.** Ask whether the owner uses, or may switch to, other agent tools such as Codex CLI or Gemini CLI. If so, set them up the same way, so the vault survives a change of model or tool:
+   - Keep one canonical copy of the global section from item 3 in a file the owner versions, such as a private repo, and write it to each tool's global instruction file: `~/.claude/CLAUDE.md` for Claude Code, `~/.codex/AGENTS.md` for Codex CLI, and `~/.gemini/GEMINI.md` for Gemini CLI. Confirm each path in the tool's current docs.
+   - Offer a small script that copies the canonical file to every target, run at logon or on a schedule, so the copies never drift. Mark each copy as generated, so nobody edits it by hand.
+   - If a tool loads skills, link the vault's capture folder into the folder that tool scans, as in item 2.
+   - If a tool offers a session-start hook, point it at the same `session_start.py`. Otherwise, step 1 of `AGENTS.md` has the agent pull first.
+6. **Phone.** The Claude app's **Code** tab runs cloud Claude Code sessions that can clone the repo and push. Regular app chats cannot write to GitHub. Have the owner install the Claude GitHub App (github.com/apps/claude) on the vault repo. Tell the owner to always open phone and cloud sessions on the vault repo: a cloud session only reaches the repo it was opened on and never sees the laptop's global `CLAUDE.md`.
+7. **Branch cleanup.** Cloud sessions leave `claude/...` branches on GitHub and can't delete them. Copy `template/.github/workflows/cleanup-claude-branches.yml` into the vault. This GitHub Action deletes a `claude/` branch only when `main` already has every commit on it, on each push and once a day. Test it: push a throwaway `claude/test` branch at `main`'s commit and confirm the Action deletes it.
+8. **Test both surfaces with real captures.** After the phone test, check on GitHub that the commit landed on `main`, is authored as the owner, and passed the check.
 
 **Gate:** one real capture from each surface, confirmed in Obsidian.
 
 ## Step 5: Verify
 
 1. Have the owner open a brand-new Claude Code session **on this computer**, in a folder other than the vault, and ask questions only the vault can answer. Every answer should cite a vault file. Don't run this test in a cloud session opened on a different repo: cloud sessions only see the repo they are opened on and never read the computer's global `CLAUDE.md`, so they can't find the vault.
-2. Review the README with the owner. It should let a future agent work in the vault with no other context.
+2. If the owner set up another agent tool in Step 4, repeat the test there. The agent should find the vault and read its preferences without being told where it is.
+3. Review the README with the owner. It should let a future agent work in the vault with no other context.
 
 **Gate:** the owner signs off.
 
@@ -126,3 +141,5 @@ For example, when something out of scope was committed and pushed. Get explicit 
 ## Maintenance
 
 After setup, the owner can ask any session for a lint pass. The vault README defines it.
+
+When the owner later builds routines, skills, or agents on the vault, follow the README's "Building on the vault" rule: each model step reads only the part of the vault its task needs.

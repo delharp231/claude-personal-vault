@@ -2,5 +2,7 @@
 # Format: term | files allowed to mention it (comma separated, paths relative to the vault root)
 # Matching ignores case. A term may appear only in the listed files.
 # Leave the file list empty to forbid the term everywhere.
+# A word list only catches names and terms. A rule that needs judgment, such as
+# "nothing confidential about my employer", lives in the README's Scope section instead.
 # Example: an employer's name, allowed only in the README and the owner's own article:
 # examplecorp | README.md, People/Owner Name.md

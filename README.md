@@ -16,9 +16,10 @@ Build my personal vault using https://github.com/delharp231/claude-personal-vaul
 
 - **A private GitHub repo that is also an Obsidian vault.** Browse it in Obsidian; every change is in git history and can be rolled back.
 - **Your own design.** Claude interviews you to settle the article template, the kinds of things you track, how they link, and what stays out.
-- **A seeded vault**, built from what already exists: your Claude memory, your Claude Code and Cowork conversations, your GitHub repos, and a short interview. Every fact is cited to where it came from.
+- **A seeded vault**, built from what already exists: your Claude memory, memory from other AI assistants, your Claude Code and Cowork conversations, your GitHub repos, and a short interview. Every fact is cited to where it came from, and the memory you seeded from is kept as a read-only archive so those citations keep working.
 - **Always-on capture.** When something worth remembering comes up in any Claude Code session, on your desktop or in the Claude app's Code tab on your phone, Claude saves it to the vault on its own and tells you only about new articles, connections across different areas of your life, and conflicting information.
-- **Context in every session.** On your computer, each new Claude Code session syncs the vault and starts with its index loaded, then opens full articles only when the conversation needs them.
+- **Context in every session.** On your computer, each new Claude Code session syncs the vault and starts with its index loaded, reads your preferences before acting for you, then opens full articles only when the conversation needs them.
+- **One home for what your agents know about you.** The vault replaces your assistant's private memory, and its instructions live in a plain `AGENTS.md` that other agent tools, such as Codex CLI or Gemini CLI, can read too. Switch models or tools and your context comes with you.
 - **A safety check** that runs before every commit and blocks broken formatting or anything you have ruled out of scope.
 
 ## What you need
