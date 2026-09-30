@@ -10,7 +10,7 @@ Keep the owner's vault current without interrupting them. Capture as soon as som
 ## Find the vault
 
 - In a cloud or phone session opened on the vault repo, the vault is the repo root.
-- Otherwise, use the vault path named in the instruction that loaded this skill (the owner's global `CLAUDE.md`).
+- Otherwise, use the vault path named in the instruction that loaded this skill (the owner's global instruction file, such as `~/.claude/CLAUDE.md` for Claude Code or `~/.codex/AGENTS.md` for Codex CLI).
 - The vault root holds `README.md`, `index.md`, `log.md`, and `.claude/skills/capture/check.py`.
 
 **Read the vault's `README.md` before your first capture in a session.** It holds every rule this skill follows: scope, types and folders, the article template, relationships, life areas, and conflict handling. If this skill and the README disagree, the README wins.
