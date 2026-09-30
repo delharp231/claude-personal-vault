@@ -149,7 +149,7 @@ Agents capture durable information into this vault as it comes up, using the `ca
 
 Capture adds facts as they come up, so the vault drifts. When the owner asks for a lint pass, check for and fix:
 
-- claims with no footnote, including summary lines
+- claims with no footnote
 - research that may be out of date (check the source's date and look for newer information)
 - conflicting claims that were never flagged
 - orphan articles that nothing links to
