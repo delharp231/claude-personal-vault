@@ -1,0 +1,2 @@
+# Exceptions to check.py's rules, one per line: rule id | file path | reason | date added
+# A line with no reason is an error. A line that suppresses nothing is a warning, so stale ones get noticed.

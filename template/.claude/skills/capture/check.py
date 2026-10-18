@@ -1,100 +1,193 @@
-"""Pre-commit check for a personal ontology vault.
+"""Pre-commit check for a personal ontology vault: a rule engine over rules/.
 
-Run from anywhere: python check.py [vault_root]
-Exits 1 and prints every problem if the vault breaks a rule; exits 0 when clean.
+Usage: python check.py [vault_root] [--json] [--all] [--changed RANGE|staged] [--rule ID] [--legacy-only] [--selftest]
+
+Prints "Vault check passed: N notes." or "Vault check FAILED:" first, as it always has, then the errors, then any
+warnings. Exits 1 only when an error survives exceptions.txt. A rule on probation reports every finding as a warning.
+A rule that crashes becomes a rule-crashed warning, except a legacy rule, whose crash is an error.
+Emergency escape: --legacy-only runs only the checks that existed before the engine.
 Standard library only, so it runs on any machine or cloud session.
 """
+import argparse
+import importlib
+import json
 import os
-import re
+import pkgutil
+import subprocess
 import sys
+import tempfile
 
-ROOT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-SKIP_DIRS = {".git", ".obsidian", ".claude", ".trash", "archive"}
-SPECIAL = {"README.md", "index.md", "log.md", "CLAUDE.md", "AGENTS.md"}
-FIELD = re.compile(r"^[a-z_]+:( .*)?$")
-ITEM = re.compile(r"^  - .+$")
-problems = []
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+sys.dont_write_bytecode = True   # no __pycache__ folders in the vault for Obsidian Git to commit
 
+import rules  # noqa: E402
+import vault_parse  # noqa: E402
+from rules import REGISTRY, Finding  # noqa: E402
 
-def notes():
-    for dirpath, dirnames, filenames in os.walk(ROOT):
-        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
-        for name in filenames:
-            if name.endswith(".md"):
-                yield os.path.relpath(os.path.join(dirpath, name), ROOT).replace("\\", "/")
+EXCEPTIONS = os.path.join(HERE, "exceptions.txt")
 
 
-def read(rel):
-    with open(os.path.join(ROOT, rel), encoding="utf-8") as fh:
-        return fh.read()
+def load_rules():
+    """Import every module in rules/, so each registers its rules. Returns {module name: module}."""
+    mods = {}
+    for info in pkgutil.iter_modules(rules.__path__):
+        mods[info.name] = importlib.import_module(f"rules.{info.name}")
+    return mods
 
 
-def check_frontmatter(rel, text):
-    if not text.startswith("---\n") and not text.startswith("---\r\n"):
-        problems.append(f"{rel}: missing frontmatter")
+class Context:
+    """What every rule reads: the notes, their text (read once), and the scope terms."""
+
+    def __init__(self, root):
+        self.root = os.path.abspath(root)
+        self.notes = vault_parse.notes(self.root)
+        self._text = {}
+        self.filled = [r for r in self.notes if self.read(r).strip()]
+        self.scope = self._scope()
+
+    def read(self, rel):
+        if rel not in self._text:
+            self._text[rel] = vault_parse.read(self.root, rel)
+        return self._text[rel]
+
+    def _scope(self):
+        path = os.path.join(self.root, ".claude", "scope.txt")
+        out = []
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as fh:
+                for line in fh.read().splitlines():
+                    if not line.strip() or line.lstrip().startswith("#"):
+                        continue
+                    term, _, allowed = line.partition("|")
+                    out.append((term.strip().lower(), {a.strip() for a in allowed.split(",") if a.strip()}))
+        return out
+
+
+def parse_exceptions(text):
+    """[(rule, path, reason, added, line number)] from 'rule | path | reason | added' lines; '#' starts a comment."""
+    out = []
+    for n, line in enumerate(text.splitlines(), start=1):
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        parts += [""] * (4 - len(parts))
+        out.append((parts[0], parts[1], parts[2], parts[3], n))
+    return out
+
+
+def run(root, selected, exceptions_text="", changed=None):
+    """Run the selected rules on the vault at root. Returns (errors, warnings, note count)."""
+    ctx = Context(root)
+    findings = []
+    for r in selected:
+        try:
+            for item in r.fn(ctx) or []:
+                file, message = item[0], item[1]
+                line = item[2] if len(item) > 2 else None
+                severity = "warn" if r.stage == "probation" else r.severity
+                findings.append(Finding(r.id, severity, file, message, line))
+        except Exception as e:   # one broken rule must not hide the rest
+            sev = "error" if r.module == "legacy" else "warn"
+            findings.append(Finding("rule-crashed", sev, "", f"rule {r.id} crashed: {type(e).__name__}: {e}"))
+    used = set()
+    kept = []
+    excs = parse_exceptions(exceptions_text)
+    for f in findings:
+        hit = next((e for e in excs if e[0] == f.rule and e[1] == f.file and e[2]), None)
+        if hit:
+            used.add(hit[4])
+        else:
+            kept.append(f)
+    for rule_id, path, reason, _, n in excs:
+        if not reason:
+            kept.append(Finding("exception-no-reason", "error", "exceptions.txt", f"exceptions.txt:{n}: exception for {rule_id} on {path} gives no reason", n))
+        elif n not in used:
+            kept.append(Finding("exception-unused", "warn", "exceptions.txt", f"exceptions.txt:{n}: exception for {rule_id} on {path} suppresses nothing", n))
+    errors = [f for f in kept if f.severity == "error"]
+    warnings = [f for f in kept if f.severity != "error" and (changed is None or f.file in changed)]
+    return errors, warnings, len(ctx.notes)
+
+
+def changed_files(root, spec):
+    """Vault-relative paths touched by a git range, or by what is staged."""
+    args = ["diff", "--name-only", "--cached"] if spec == "staged" else ["diff", "--name-only", spec]
+    out = subprocess.run(["git", "-C", root, *args], capture_output=True, text=True, encoding="utf-8")
+    return {l.strip() for l in out.stdout.splitlines() if l.strip()}
+
+
+def report(errors, warnings, n, as_json=False):
+    if as_json:
+        print(json.dumps({"passed": not errors, "notes": n,
+                          "findings": [dict(f.__dict__, fingerprint=f.fingerprint) for f in errors + warnings]}, ensure_ascii=False))
         return
-    lines = text.splitlines()
-    try:
-        end = lines.index("---", 1)
-    except ValueError:
-        problems.append(f"{rel}: frontmatter is never closed with ---")
-        return
-    for n, line in enumerate(lines[1:end], start=2):
-        if not (FIELD.match(line) or ITEM.match(line)):
-            problems.append(f"{rel}:{n}: frontmatter line is not 'field: value' or '  - item': {line!r}")
-        if "[[" in line and not re.search(r'"\[\[[^\]]+\]\]"', line):
-            problems.append(f"{rel}:{n}: wikilink in frontmatter must be in quotes")
-    if not any(l.startswith("type:") for l in lines[1:end]):
-        problems.append(f"{rel}: frontmatter has no type field")
+    if errors:
+        print("Vault check FAILED:")
+        for f in errors:
+            print(" -", f.message)
+    else:
+        print(f"Vault check passed: {n} notes.")
+    if warnings:
+        print("Warnings:")
+        for f in warnings:
+            print(f" - [{f.rule}] {f.message}")
 
 
-def load_scope():
-    path = os.path.join(ROOT, ".claude", "scope.txt")
-    rules = []
-    if os.path.exists(path):
-        for line in read(".claude/scope.txt").splitlines():
-            if not line.strip() or line.lstrip().startswith("#"):
-                continue
-            term, _, allowed = line.partition("|")
-            rules.append((term.strip().lower(), {a.strip() for a in allowed.split(",") if a.strip()}))
-    return rules
+def selftest(mods):
+    """Every rule module's FIXTURES must give exactly their expected rule ids; a rule with no fixture fails."""
+    count, failures = 0, []
+    for name, mod in sorted(mods.items()):
+        own = [r for r in REGISTRY if r.module == name]
+        covered = set()
+        for fname, files, expected in getattr(mod, "FIXTURES", []):
+            with tempfile.TemporaryDirectory() as tmp:
+                for rel, text in files.items():
+                    p = os.path.join(tmp, *rel.split("/"))
+                    os.makedirs(os.path.dirname(p), exist_ok=True)
+                    with open(p, "w", encoding="utf-8", newline="") as fh:
+                        fh.write(text)
+                errs, warns, _ = run(tmp, own)
+                got = {f.rule for f in errs + warns}
+            count += 1
+            covered |= set(expected)
+            if got != set(expected):
+                failures.append(f"{name}: {fname}: expected {sorted(expected)}, got {sorted(got)}")
+        for r in own:
+            if r.id not in covered:
+                failures.append(f"{name}: rule {r.id} has no fixture that expects it")
+    if failures:
+        print("SELFTEST FAILED:")
+        for f in failures:
+            print(" -", f)
+        return 1
+    print(f"SELFTEST OK {count} fixtures")
+    return 0
 
 
-all_notes = sorted(notes())
-titles = {os.path.splitext(os.path.basename(r))[0] for r in all_notes}
-index = read("index.md") if "index.md" in all_notes else ""
-scope = load_scope()
+def main(argv=None):
+    ap = argparse.ArgumentParser(description="Check a personal ontology vault.")
+    ap.add_argument("root", nargs="?", default=os.path.join(HERE, "..", "..", ".."))
+    ap.add_argument("--json", action="store_true", help="print findings as JSON")
+    ap.add_argument("--all", action="store_true", help="check every note (the default)")
+    ap.add_argument("--changed", help="report warnings only for files in this git range, or 'staged'; errors anywhere")
+    ap.add_argument("--rule", help="run only this rule id")
+    ap.add_argument("--legacy-only", action="store_true", help="run only the checks that existed before the engine")
+    ap.add_argument("--selftest", action="store_true", help="run every rule's fixtures and exit")
+    args = ap.parse_args(argv)
+    mods = load_rules()
+    if args.selftest:
+        return selftest(mods)
+    selected = [r for r in REGISTRY if (not args.legacy_only or r.module == "legacy") and (not args.rule or r.id == args.rule)]
+    exceptions_text = ""
+    if os.path.exists(EXCEPTIONS):
+        with open(EXCEPTIONS, encoding="utf-8") as fh:
+            exceptions_text = fh.read()
+    root = os.path.abspath(args.root)
+    changed = changed_files(root, args.changed) if args.changed else None
+    errors, warnings, n = run(root, selected, exceptions_text, changed)
+    report(errors, warnings, n, args.json)
+    return 1 if errors else 0
 
-PLACEHOLDER = re.compile(r"<[A-Z][A-Z ]{3,}|<!-- Setup:")
-for rel in ("README.md", "CLAUDE.md"):
-    if rel in all_notes:
-        for n, line in enumerate(read(rel).splitlines(), start=1):
-            if PLACEHOLDER.search(line):
-                problems.append(f"{rel}:{n}: unfilled setup placeholder: {line.strip()[:80]}")
 
-for rel in all_notes:
-    text = read(rel)
-    if not text.strip():
-        problems.append(f"{rel}: empty note (often made by clicking an unresolved link in Obsidian)")
-        continue
-    if "/" not in rel and rel not in SPECIAL:
-        problems.append(f"{rel}: note in the vault root; move it into its type folder")
-    if "—" in text or "–" in text:
-        problems.append(f"{rel}: contains an em or en dash")
-    lower = text.lower()
-    for term, allowed in scope:
-        if term in lower and rel not in allowed:
-            problems.append(f"{rel}: mentions scope term '{term}' outside its allowed files")
-    name = os.path.basename(rel)
-    if "/" in rel and name not in SPECIAL:
-        check_frontmatter(rel, text)
-        title = os.path.splitext(name)[0]
-        if f"[[{title}]]" not in index:
-            problems.append(f"{rel}: not listed in index.md")
-
-if problems:
-    print("Vault check FAILED:")
-    for p in problems:
-        print(" -", p)
-    sys.exit(1)
-print(f"Vault check passed: {len(all_notes)} notes.")
+if __name__ == "__main__":
+    sys.exit(main())
