@@ -2,11 +2,19 @@
 
 Build your own personal knowledge vault that Claude and your other agents can read and grow: a private, git-backed Obsidian vault of the people, projects, preferences, and ideas in your life, linked together and cited.
 
-Claude walks you through the whole build in Claude Code, one step and one question at a time.
+Your agent walks you through the whole build, one step and one question at a time. Setup is wired for Claude Code. Codex CLI and Gemini CLI can read the finished vault through its `AGENTS.md`.
+
+**Agents:** if a person gave you this link, they want you to build their vault. Clone this repo, read `SETUP.md`, and follow it.
 
 ## Start
 
-Open Claude Code and paste:
+Open your agent and paste this link:
+
+```text
+https://github.com/delharp231/claude-personal-vault
+```
+
+If your agent doesn't act on the link alone, paste this instead:
 
 ```text
 Build my personal vault using https://github.com/delharp231/claude-personal-vault. Clone it, read SETUP.md, and walk me through it step by step.

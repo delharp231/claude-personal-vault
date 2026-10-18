@@ -23,6 +23,7 @@ You are helping the owner build a personal ontology vault: a private, git-backed
 
 | Path | Use |
 | --- | --- |
+| `AGENTS.md` | Tells an agent that was handed this repo to read this guide and follow it. It is for this repo, not the vault. |
 | `template/` | Starting files for the owner's vault. Copy, then fill in. |
 | `template/AGENTS.md` | Session-start steps any agent tool can read. The vault's `CLAUDE.md` imports it, so Claude reads the same file and the two can't drift. |
 | `template/.claude/skills/capture/` | The capture skill, its check engine (`check.py` and `rules/`), and the index builder (`build_index.py`). Generic: they read every owner-specific rule from the vault's README. |
@@ -42,13 +43,26 @@ Check, do not assume:
 - The operating system, because commands differ between Windows and macOS or Linux.
 - `git config --global user.email`. Suggest the owner's GitHub noreply address if it is unset or a placeholder.
 
+## Step 0.5: Identify your harness
+
+Work out which tool you are running in, because Step 4 differs by harness. Confirm each path in the tool's current docs before writing to it.
+
+| Harness | Global instruction file | Hooks in this guide | Skills folder |
+| --- | --- | --- | --- |
+| Claude Code | `~/.claude/CLAUDE.md` | Wired in Step 4, in `~/.claude/settings.json` | `~/.claude/skills/` |
+| Codex CLI | `~/.codex/AGENTS.md` | Not wired. The agent runs the loader, as `AGENTS.md` step 2 says. | `~/.agents/skills/` |
+| Gemini CLI | `~/.gemini/GEMINI.md` | Not wired. Same fallback. | `~/.agents/skills/` |
+| Other | The tool's global instruction file | Not wired. Same fallback. | The tool's skills folder |
+
+Tell the owner which row you are using. If the owner may switch tools later, Step 4 item 5 covers writing the same instructions to every tool.
+
 ## Step 1: Repo and vault
 
 1. Ask the owner for a vault name and a location.
 2. Create the folder, run `git init -b main`, then `gh repo create <name> --private --source . --remote origin`.
 3. Have the owner open the folder in Obsidian with **Open folder as vault**. Then look at what Obsidian wrote in `.obsidian/`.
 4. Copy `template/.gitignore` into the vault. It ignores Obsidian's constantly changing UI state (`workspace.json`), the trash, and OS clutter. Explain the rule: track content and settings, ignore anything that changes from clicking around.
-5. Make the first commit and push it.
+5. Make the first commit and push it. Record which version of this setup repo you built from by adding `YYYY-MM-DD | build | Set up from claude-personal-vault at <output of git rev-parse HEAD in the setup repo>` to the vault's `log.md`, so the owner can later see what changed upstream.
 6. Sync: have the owner install the community plugin **Git** (by Vinzent) through Obsidian's plugin browser, then set auto commit-and-sync to 10 minutes, auto pull to 10 minutes, and pull on startup.
 7. Test the plugin: the owner runs **Git: Commit-and-sync** from the command palette. Warn them first: **close the Settings window before running commands**, or the command silently does nothing. Confirm the commit reached GitHub.
 8. Watch for accidental stub notes. The Daily note and Bases icons create files with one click. Ask before deleting any.
@@ -118,6 +132,7 @@ Rules while seeding:
 
    The vault's own `AGENTS.md`, which its `CLAUDE.md` imports, covers sessions opened on the repo.
 4. **Hooks.** Register three hooks in the owner's `~/.claude/settings.json`. `session_start.py` pulls the vault at the start of every session on this computer (fast-forward only, so it never merges or leaves a conflict, and it skips quietly when offline) and prints the always-on context. `pref_loader.py prompt` and `pref_loader.py tool` inject a Preference when its triggers match a prompt or a tool call. Sessions then start current even when Obsidian is closed, and the capture skill is always the latest version.
+   - These commands run on every session, so show the owner the exact JSON below and wait for approval before you merge it.
    - Back up `settings.json` first, then merge this in without removing existing settings: `{"hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": "python \"<vault>/.claude/hooks/session_start.py\"", "timeout": 30}]}], "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "python \"<vault>/.claude/hooks/pref_loader.py\" prompt", "timeout": 10}]}], "PreToolUse": [{"matcher": "Write|Edit|NotebookEdit|mcp__.*", "hooks": [{"type": "command", "command": "python \"<vault>/.claude/hooks/pref_loader.py\" tool", "timeout": 10}]}]}}`. Use forward slashes in the path, and `python3` if that is the owner's Python command. Widen the `PreToolUse` matcher only if a Preference needs another tool.
    - Test it by running `session_start.py` once by hand: it should print a one-line header, the rules digest, the topic hubs, and the core Preferences. Then pipe a prompt that matches a trigger into `pref_loader.py prompt` and confirm it prints a "Preferences loaded" message.
    - To turn the loader off, create an empty file named `pref_loader.off` next to the script. The session hook then tells the agent to read every Preference.
