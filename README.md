@@ -18,7 +18,8 @@ Build my personal vault using https://github.com/delharp231/claude-personal-vaul
 - **Your own design.** Claude interviews you to settle the article template, the kinds of things you track, how they link, and what stays out.
 - **A seeded vault**, built from what already exists: your Claude memory, memory from other AI assistants, your Claude Code and Cowork conversations, your GitHub repos, and a short interview. Every fact is cited to where it came from, and the memory you seeded from is kept as a read-only archive so those citations keep working.
 - **Always-on capture.** When something worth remembering comes up in any Claude Code session, on your desktop or in the Claude app's Code tab on your phone, Claude saves it to the vault on its own and tells you only about new articles, connections across different areas of your life, and conflicting information.
-- **Context in every session.** On your computer, each new Claude Code session syncs the vault and starts with its index loaded, reads your preferences before acting for you, then opens full articles only when the conversation needs them.
+- **Context in every session.** On your computer, each new Claude Code session syncs the vault and starts with a small always-on context: a rules digest, your topic list, and your core preferences. Your other preferences load by themselves when a prompt or tool call matches their triggers, and full articles open only when the conversation needs them.
+- **A generated index.** `index.md` and `catalog.md` are built from your articles' topics, so they never drift from the vault and agents find things through topic hubs instead of scanning everything.
 - **One home for what your agents know about you.** The vault replaces your assistant's private memory, and its instructions live in a plain `AGENTS.md` that other agent tools, such as Codex CLI or Gemini CLI, can read too. Switch models or tools and your context comes with you.
 - **A safety check** that runs before every commit and blocks broken formatting or anything you have ruled out of scope.
 
@@ -36,7 +37,7 @@ Plan for a few hours, spread across as many sittings as you like. Each step ends
 | Path | What it is |
 | --- | --- |
 | `SETUP.md` | The step-by-step guide Claude follows |
-| `template/` | Starting files for your vault, including the capture skill and check script |
+| `template/` | Starting files for your vault, including the capture skill, check engine, index builder, and preference loader |
 | `reference/` | The research the design is based on: personal knowledge management, ontologies, and agent-readable markdown |
 | `tools/extract_messages.py` | Pulls your own messages out of Claude transcripts for seeding |
 

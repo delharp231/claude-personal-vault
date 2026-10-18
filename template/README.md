@@ -20,7 +20,8 @@
 | `catalog.md` | Every article under each of its topics, one line each. Only the hubs are links; article titles are plain text, so the graph reaches an article through its hub. Generated; open it when the root isn't enough. |
 | `log.md` | Append-only record of changes, newest at the bottom |
 | `archive/` | Read-only snapshots of other agents' memory, cited as sources |
-| `AGENTS.md` | Session-start steps for any agent or harness: pull, read the rules and index, read `Preferences/`, capture |
+| `AGENTS.md` | Session-start steps for any agent or harness: pull, load the always-on context, load Preferences on demand, capture |
+| `.claude/hooks/pref_loader.py` | Loads Preferences on demand: the always-on session context, plus triggers that inject a Preference when a prompt or tool call matches. Each Preference sets its own tier and triggers in its frontmatter. |
 | `CLAUDE.md` | Imports `AGENTS.md`, so Claude sessions load the same instructions |
 | `.claude/skills/capture/SKILL.md` | The capture procedure |
 | `.claude/skills/capture/check.py` | Pre-commit check. Run `python .claude/skills/capture/check.py .` and never commit while it fails |
@@ -48,7 +49,7 @@ One folder per type. No subfolders. The `type` field repeats the folder so queri
 | `Animals/` | `animal` | Species or breed research |
 | `Pets/` | `pet` | Animals owned by the owner or their family. Say whose in the summary. Link each to its Animal with `is_a`. |
 | `Goals/` | `goal` | What the owner is working toward. Each has a `## Plan` section. |
-| `Preferences/` | `preference` | How the owner wants things done. Check these before acting for them. |
+| `Preferences/` | `preference` | How the owner wants things done. Each says how it loads (see Preferences). |
 | `Sources/` | `source` | Anything made by someone else that earns its own page: a book, article, video, paper, or game |
 
 ## Article template
@@ -115,6 +116,18 @@ Rules:
 - **Store one direction only.** Write the field on the article named first in the table's meaning. Obsidian backlinks show the reverse. Never add inverse fields like `has_part`.
 - **Field names are snake_case.**
 - **Relationships between people go in the body as prose,** not as fields.
+
+## Preferences
+
+Preferences load by tier, so a session starts small and a Preference arrives when its task does. `pref_loader.py` reads each article's frontmatter:
+
+- `tier: core` loads at every session start. Give it `full: true` to load the whole article, or a `digest:` list of short rules to load only those.
+- `tier: pinned` loads one `line:` at every session start.
+- `tier: ondemand` (the default) loads only its title, then the full article when a trigger fires.
+- Triggers are regexes, written raw on one line: `trigger_prompt` (matches the prompt, case-insensitive), `trigger_tool_names`, `trigger_path`, `trigger_cwd`, and `trigger_path_ext` with `trigger_path_must` and `trigger_path_not` for Write and Edit calls. Add `section: ## Rules` to load only that section.
+- A hook announces "Preferences loaded: ..." when it injects one, and each Preference loads at most once per session.
+- Without hooks, open the matching Preference yourself before the task it governs.
+- `check.py` rejects a bad tier, an empty core Preference, an unknown `trigger_` field, and a regex that does not compile.
 
 ## Topics
 
@@ -199,4 +212,4 @@ Routines, skills, and agents built on this vault read only the part a task needs
 
 ## Sync
 
-The Obsidian Git plugin pulls on startup, and pulls, commits, and pushes every 10 minutes. On the owner's computer, a SessionStart hook (`.claude/hooks/session_start.py`, plain Python) also pulls, fast-forward only, at the start of every Claude Code session and loads `index.md` as context, so sessions start current even when Obsidian is closed. Harnesses without that hook pull as the first step in `AGENTS.md`. Agents read the index every session and open articles only when needed. Agents writing outside Obsidian pull with rebase right before committing, run the check script, then push straight to `main`. If a rebase conflicts, stop and flag it rather than forcing it.
+The Obsidian Git plugin pulls on startup, and pulls, commits, and pushes every 10 minutes. On the owner's computer, a SessionStart hook (`.claude/hooks/session_start.py`, plain Python) also pulls, fast-forward only, at the start of every Claude Code session and prints the always-on context (the rules digest, the topic hubs, and the core Preferences), so sessions start current even when Obsidian is closed. Harnesses without that hook pull and run `pref_loader.py session` as the first steps in `AGENTS.md`. Agents open articles only when needed. Agents writing outside Obsidian pull with rebase right before committing, run the check script, then push straight to `main`. If a rebase conflicts only in `index.md` or `catalog.md`, rebuild them and continue. Any other conflict: stop and flag it rather than forcing it.
