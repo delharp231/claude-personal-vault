@@ -38,7 +38,7 @@ Build my personal vault using https://github.com/delharp231/claude-personal-vaul
 - [Obsidian](https://obsidian.md)
 - Claude Code on a plan that includes cloud sessions, if you want to capture from your phone. Phone sessions must be opened on your vault repo.
 
-Plan for a few hours, spread across as many sittings as you like. Each step ends with a checkpoint for your approval.
+Quick start takes about four questions and starts you with an empty vault that fills as you work. The full interview takes a few hours, spread across as many sittings as you like, and seeds the vault from what already exists. Each step ends with a checkpoint for your approval.
 
 ## What's in this repo
 
@@ -47,6 +47,8 @@ Plan for a few hours, spread across as many sittings as you like. Each step ends
 | `SETUP.md` | The step-by-step guide Claude follows |
 | `template/` | Starting files for your vault, including the capture skill, check engine, index builder, and preference loader |
 | `reference/` | The research the design is based on: personal knowledge management, ontologies, and agent-readable markdown |
+| `MAINTAINING.md` | How to port improvements from a working vault, and what to check before pushing |
+| `tools/sync_global_instructions.py` | Keeps one instructions file in step across Claude Code, Codex CLI, and Gemini CLI |
 | `tools/extract_messages.py` | Pulls your own messages out of Claude transcripts for seeding |
 
 ## Privacy

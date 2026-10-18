@@ -11,6 +11,27 @@ You are helping the owner build a personal ontology vault: a private, git-backed
 - **Make no assumptions.** If something is unclear or unverified, ask or check. Never write an inference into the vault as a fact: "drives to a town to look after a relative's pets" does not mean "the relative lives there."
 - **Each step ends with a gate.** Do not start the next step until the owner approves.
 
+## Choose a mode
+
+Offer the owner two modes at the start, and use Quick start if they just say go.
+
+- **Quick start** takes about four questions and uses the tested defaults. The vault starts empty, and capture fills it as you work.
+- **Full interview** runs every step below as written, including the design decisions in Step 2 and seeding in Step 3. It takes a few hours.
+
+In Quick start, run Steps 0, 0.5, 1, 4, and 5 as written, with these changes:
+
+1. **Ask four questions, one at a time, as multiple choice where you can:**
+   - The vault's name and location.
+   - The owner's name, GitHub username, and noreply email, for the commit identity.
+   - The bright line: what must never go in, such as an employer's internal details. Ask about sensitive categories too.
+   - The starting topics: keep the single starter hub and let the list grow, or give a short list now.
+2. **Summarize the four answers and get one approval.** That replaces the Step 2 gates.
+3. **Skip Step 2's interview.** Copy `template/` into the vault, then fill `README.md` with the defaults already in it: the article template, types, relationships, folders, and life areas. Treat goals as fixed targets and delete the "Goals are directions" section. Fill the Scope section from the bright line, the commit identity from the second answer, and the topics from the fourth. Remove the setup comments, run `build_index.py`, and run `check.py` until it passes.
+4. **Skip Step 3.** Tell the owner they can ask for seeding at any time, for example "seed my vault from my Claude memory", and that you will follow Step 3 then.
+5. **Run Step 4 in full**, since the hooks and the capture skill are the point of the build. Ask whether the owner wants phone capture (item 6) and whether they use other agent tools (item 5), and skip what they decline.
+
+At the end, tell the owner what stays manual: the GitHub account, `gh` sign-in, and installing Obsidian and its Git plugin.
+
 ## Safety rules for the whole build
 
 - Never force-push, delete files, delete branches, or rewrite git history without the owner's explicit approval for that specific action.
@@ -31,6 +52,7 @@ You are helping the owner build a personal ontology vault: a private, git-backed
 | `template/Preferences/` | Two default Preferences about how the vault works, not about the owner: "Stay grounded" and "Reference the vault selectively". |
 | `template/Creative works/` | The `Vault topics` scheme article and one starter hub. Step 2 replaces the hub with the owner's own topics. |
 | `reference/` | Three research articles behind the design. Use them in Step 2 instead of redoing the research. |
+| `tools/sync_global_instructions.py` | Copies the owner's one canonical instructions file to each harness's global instruction file (Step 4, item 5). |
 | `tools/extract_messages.py` | Pulls only the owner's own typed messages out of Claude Code and Cowork transcripts, for seeding. |
 
 ## Step 0: Preflight
@@ -138,7 +160,8 @@ Rules while seeding:
    - To turn the loader off, create an empty file named `pref_loader.off` next to the script. The session hook then tells the agent to read every Preference.
 5. **Other agent tools.** Ask whether the owner uses, or may switch to, other agent tools such as Codex CLI or Gemini CLI. If so, set them up the same way, so the vault survives a change of model or tool:
    - Keep one canonical copy of the global section from item 3 in a file the owner versions, such as a private repo, and write it to each tool's global instruction file: `~/.claude/CLAUDE.md` for Claude Code, `~/.codex/AGENTS.md` for Codex CLI, and `~/.gemini/GEMINI.md` for Gemini CLI. Confirm each path in the tool's current docs.
-   - Offer a small script that copies the canonical file to every target, run at logon or on a schedule, so the copies never drift. Mark each copy as generated, so nobody edits it by hand.
+   - Use `tools/sync_global_instructions.py` to copy the canonical file to every target. Run it with `--dry-run` first and show the owner the output. It writes only to harnesses whose folder already exists, marks each copy as generated, never deletes anything, and skips a target the owner wrote by hand unless they pass `--replace`, which backs it up first.
+   - Ask before scheduling it at logon or on a timer, so the copies never drift. Do not create the scheduled job without approval.
    - If a tool loads skills, link the vault's capture folder into the folder that tool scans, as in item 2.
    - If a tool offers a session-start hook, point it at the same `session_start.py`. Otherwise, steps 1 and 2 of `AGENTS.md` have the agent pull first, then run `pref_loader.py session` and read the output. Without prompt and tool hooks, the agent opens the matching Preference itself before the task it governs.
 6. **Phone.** The Claude app's **Code** tab runs cloud Claude Code sessions that can clone the repo and push. Regular app chats cannot write to GitHub. Have the owner install the Claude GitHub App (github.com/apps/claude) on the vault repo. Tell the owner to always open phone and cloud sessions on the vault repo: a cloud session only reaches the repo it was opened on and never sees the laptop's global `CLAUDE.md`.
