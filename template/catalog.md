@@ -7,4 +7,6 @@ Every article, filed under its topics. An article with several topics appears un
 
 The owner's private, git-backed knowledge base, read and grown by their Claude sessions and agents.
 
+- Reference the vault selectively (Preference): Name the specific vault entry points a task needs, such as `log.md` for a date range or particular articles, and open other articles only when those point...
+- Stay grounded (Preference): Every response states only what a source, file, or tool result supports.
 - Vault topics (Creative work): The controlled list of topics the vault's index is built on.

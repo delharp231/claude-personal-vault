@@ -8,12 +8,12 @@ The vault's entry point. Topics group every article, and `catalog.md` lists each
 
 ## Topics
 
-- [[Personal ontology vault]] (1): The owner's private, git-backed knowledge base, read and grown by their Claude sessions and agents.
+- [[Personal ontology vault]] (3): The owner's private, git-backed knowledge base, read and grown by their Claude sessions and agents.
 
 ## Preferences
 
 Core ones load every session. The rest load on demand by hook (see `.claude/hooks/pref_loader.py`); open one yourself if no hook did and the task fits.
 
-
+[[Reference the vault selectively]], [[Stay grounded]]
 
 Every article by topic: `catalog.md`. Browse by type: the vault's folders.

@@ -9,3 +9,9 @@
 # OS clutter
 .DS_Store
 Thumbs.db
+
+# Python caches from the vault tools
+__pycache__/
+
+# Preference loader log (per-device)
+.claude/hooks/pref_injections.log
