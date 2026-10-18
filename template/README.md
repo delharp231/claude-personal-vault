@@ -119,7 +119,7 @@ Rules:
 
 ## Preferences
 
-Preferences load by tier, so a session starts small and a Preference arrives when its task does. `pref_loader.py` reads each article's frontmatter:
+Preferences load by tier. A session starts with the core ones, and the rest arrive when their task does. `pref_loader.py` reads each article's frontmatter:
 
 - `tier: core` loads at every session start. Give it `full: true` to load the whole article, or a `digest:` list of short rules to load only those.
 - `tier: pinned` loads one `line:` at every session start.
